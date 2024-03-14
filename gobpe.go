@@ -26,9 +26,19 @@ func (p *Pair) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type Preprocessor struct {
+	Pattern     regexp.Regexp `json:"pattern"`
+	Replacement []byte        `json:"replacement"`
+}
+
+func (p Preprocessor) Process(text []byte) []byte {
+	return p.Pattern.ReplaceAll(text, p.Replacement)
+}
+
 type Tokenizer struct {
 	Tokens            [][]int       `json:"-"`
-	Split             regexp.Regexp `json:"split_ergexp"`
+	TextPreprocessor  Preprocessor  `json:"preprocessor"`
+	SplitPattern      regexp.Regexp `json:"split_regexp"`
 	LastToken         int           `json:"last_token"`
 	ReplacementKeys   []Pair        `json:"replacement_keys"`
 	ReplacementValues []int         `json:"replacement_values"`
@@ -36,8 +46,8 @@ type Tokenizer struct {
 
 func NewTokenizer(text []byte, split *regexp.Regexp) *Tokenizer {
 	t := &Tokenizer{
-		Split:     *split,
-		LastToken: MaxSimpleToken,
+		SplitPattern: *split,
+		LastToken:    MaxSimpleToken,
 	}
 	byteSequences := split.FindAll(text, -1)
 	t.tokensFromBytes(byteSequences)
@@ -171,13 +181,44 @@ func (t *Tokenizer) Decode(tokens []int) []byte {
 	return decodedBytes
 }
 
+func (t *Tokenizer) StringTokens() map[int]string {
+	var tokens map[int]string = make(map[int]string)
+	var result map[int][]byte = make(map[int][]byte)
+	for i := 0; i < len(t.ReplacementKeys); i++ {
+		tokenId := t.ReplacementValues[i]
+		result[tokenId] = make([]byte, 0)
+		for j := 0; j < 2; j++ {
+			if t.ReplacementKeys[i].Value[j] > MaxSimpleToken {
+				idx := t.ReplacementKeys[i].Value[j]
+				result[tokenId] = append(result[tokenId], result[idx]...)
+			} else {
+				result[tokenId] = append(result[tokenId], byte(t.ReplacementKeys[i].Value[j]))
+			}
+		}
+		tokens[tokenId] = string(result[tokenId])
+	}
+	return tokens
+}
+
 func main() {
-	text := MustReadFile("lorem.txt")
+	preprocessor := Preprocessor{
+		Pattern:     *regexp.MustCompile(`([[:punct:]]|^)(\p{L})`),
+		Replacement: []byte(`$1 $2`),
+	}
 	split := regexp.MustCompile(`(^\p{L}+| \p{L}+| [0-9]+|[[:punct:]]|[[:space:]]+)`)
-	tokenizer := NewTokenizer(text, split)
+
+	text := MustReadFile("lorem.txt")
+	textProcessed := preprocessor.Process(text)
+
+	tokenizer := NewTokenizer(textProcessed, split)
 	tokenizer.Fit(1000, 1000)
 	tokenizerBytes, _ := tokenizer.Serialize()
 	MustWriteToFile("params.json", tokenizerBytes)
+
+	tokens := tokenizer.StringTokens()
+	for tokenId, tokenString := range tokens {
+		fmt.Printf("%v: %v\n", tokenId, tokenString)
+	}
 
 	text2 := MustReadFile("latin.txt")
 	encoded := tokenizer.Encode(text2)
