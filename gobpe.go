@@ -2,20 +2,35 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/axent-pl/gobpe/preprocessor"
 	"github.com/axent-pl/gobpe/tokenizer"
 )
 
+const DEFAULT_SPLIT_PATTERN = `(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]|\s+`
+const DEFAULT_PREPROCESSOR_PATTERN = `([;.]|^)(\p{L})`
+const DEFAULT_PREPROCESSOR_REPLACEMENT = `$1 $2`
+
 func main() {
+	links, err := LoadLinksFromFile(`data/url/bajki.txt`)
+	if err != nil {
+		panic(err)
+	}
+	paths, err := Download(links, `data/txt/`)
+	if err != nil {
+		panic(err)
+	}
+
 	tokenizr := tokenizer.New(
-		tokenizer.WithSplitPattern(`(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]|\s+`),
-		tokenizer.WithPreprocessor(preprocessor.New(`([;.]|^)(\p{L})`, `$1 $2`)),
+		tokenizer.WithSplitPattern(DEFAULT_SPLIT_PATTERN),
+		tokenizer.WithPreprocessor(preprocessor.New(DEFAULT_PREPROCESSOR_PATTERN, DEFAULT_PREPROCESSOR_REPLACEMENT)),
 	)
 
-	text := MustReadFile("lorem.txt")
-	tokenizr.LoadText(text)
+	for _, filePath := range paths {
+		text := MustReadFile(filePath)
+		tokenizr.LoadText(text)
+	}
+
 	tokenizr.Fit(1000, 1000)
 
 	tokenizerBytes, _ := tokenizr.Serialize()
@@ -26,7 +41,7 @@ func main() {
 		fmt.Printf("%v: %v\n", tokenId, tokenString)
 	}
 
-	text2 := MustReadFile("latin.txt")
+	text2 := MustReadFile("sample.txt")
 	encoded := tokenizr.Encode(text2)
 	decoded := string(tokenizr.Decode(encoded))
 	fmt.Println(decoded)
@@ -39,19 +54,4 @@ func main() {
 	decoded2 := string(tokenizr.Decode(encoded2))
 	fmt.Println(decoded2)
 	fmt.Printf("Length before encoding: %v, Length after encoding: %v\n", len(text2), len(encoded2))
-}
-
-func MustWriteToFile(filename string, data []byte) {
-	err := os.WriteFile(filename, data, 0600)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func MustReadFile(filepath string) []byte {
-	bytes, err := os.ReadFile(filepath)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
 }
