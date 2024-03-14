@@ -7,6 +7,8 @@ import (
 	"regexp"
 )
 
+const MaxSimpleToken = 255
+
 type Pair struct {
 	Value [2]int
 }
@@ -30,14 +32,12 @@ type Tokenizer struct {
 	LastToken         int           `json:"last_token"`
 	ReplacementKeys   []Pair        `json:"replacement_keys"`
 	ReplacementValues []int         `json:"replacement_values"`
-	ReplacementIndex  map[int]int   `json:"replacement_index"`
 }
 
 func NewTokenizer(text []byte, split *regexp.Regexp) *Tokenizer {
 	t := &Tokenizer{
-		Split:            *split,
-		LastToken:        255,
-		ReplacementIndex: make(map[int]int),
+		Split:     *split,
+		LastToken: MaxSimpleToken,
 	}
 	byteSequences := split.FindAll(text, -1)
 	t.tokensFromBytes(byteSequences)
@@ -54,7 +54,6 @@ func (t *Tokenizer) Deserialize(data []byte) error {
 		return err
 	}
 	t.LastToken = tc.LastToken
-	t.ReplacementIndex = tc.ReplacementIndex
 	t.ReplacementKeys = tc.ReplacementKeys
 	t.ReplacementValues = tc.ReplacementValues
 	return nil
@@ -88,7 +87,6 @@ func (t *Tokenizer) Fit(maxIterations int, maxTokenValue int) {
 func (t *Tokenizer) ReplacePair(pair Pair, value int) {
 	t.ReplacementKeys = append(t.ReplacementKeys, pair)
 	t.ReplacementValues = append(t.ReplacementValues, value)
-	t.ReplacementIndex[value] = len(t.ReplacementValues) - 1
 	for i, tokenSeq := range t.Tokens {
 		newSeq := make([]int, 0, len(tokenSeq))
 		for j := 0; j < len(tokenSeq); {
@@ -155,8 +153,8 @@ func (t *Tokenizer) Decode(tokens []int) []byte {
 	for i := len(t.ReplacementKeys) - 1; i >= 0; i-- {
 		decodedReplaced := make([]int, 0, len(decoded))
 		for c := 0; c < len(decoded); c++ {
-			if decoded[c] > 255 {
-				idx := t.ReplacementIndex[decoded[c]]
+			if decoded[c] > MaxSimpleToken {
+				idx := decoded[c] - MaxSimpleToken - 1
 				decodedReplaced = append(decodedReplaced, t.ReplacementKeys[idx].Value[0])
 				decodedReplaced = append(decodedReplaced, t.ReplacementKeys[idx].Value[1])
 			} else {

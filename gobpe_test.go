@@ -11,7 +11,6 @@ func TestTokenizer_ReplacePair(t *testing.T) {
 		MaxToken          int
 		ReplacementKeys   []Pair
 		ReplacementValues []int
-		ReplacementIndex  map[int]int
 	}
 	type args struct {
 		pair  Pair
@@ -33,7 +32,6 @@ func TestTokenizer_ReplacePair(t *testing.T) {
 				MaxToken:          255,
 				ReplacementKeys:   nil,
 				ReplacementValues: nil,
-				ReplacementIndex:  make(map[int]int),
 			},
 			args: args{
 				pair:  Pair{Value: [2]int{2, 3}},
@@ -54,7 +52,6 @@ func TestTokenizer_ReplacePair(t *testing.T) {
 				MaxToken:          255,
 				ReplacementKeys:   nil,
 				ReplacementValues: nil,
-				ReplacementIndex:  make(map[int]int),
 			},
 			args: args{
 				pair:  Pair{Value: [2]int{2, 3}},
@@ -75,7 +72,6 @@ func TestTokenizer_ReplacePair(t *testing.T) {
 				MaxToken:          255,
 				ReplacementKeys:   nil,
 				ReplacementValues: nil,
-				ReplacementIndex:  make(map[int]int),
 			},
 			args: args{
 				pair:  Pair{Value: [2]int{3, 4}},
@@ -94,7 +90,6 @@ func TestTokenizer_ReplacePair(t *testing.T) {
 				LastToken:         tt.fields.MaxToken,
 				ReplacementKeys:   tt.fields.ReplacementKeys,
 				ReplacementValues: tt.fields.ReplacementValues,
-				ReplacementIndex:  tt.fields.ReplacementIndex,
 			}
 			tr.ReplacePair(tt.args.pair, tt.args.value)
 			for i, tokenSeq := range tr.Tokens {
@@ -112,7 +107,6 @@ func TestTokenizer_FindMostFrequentPair(t *testing.T) {
 		MaxToken          int
 		ReplacementKeys   []Pair
 		ReplacementValues []int
-		ReplacementIndex  map[int]int
 	}
 	tests := []struct {
 		name      string
@@ -130,7 +124,6 @@ func TestTokenizer_FindMostFrequentPair(t *testing.T) {
 				MaxToken:          255,
 				ReplacementKeys:   nil,
 				ReplacementValues: nil,
-				ReplacementIndex:  make(map[int]int),
 			},
 			wantPair:  Pair{Value: [2]int{2, 3}},
 			wantCount: 2,
@@ -145,7 +138,6 @@ func TestTokenizer_FindMostFrequentPair(t *testing.T) {
 				MaxToken:          255,
 				ReplacementKeys:   nil,
 				ReplacementValues: nil,
-				ReplacementIndex:  make(map[int]int),
 			},
 			wantPair:  Pair{},
 			wantCount: 0,
@@ -158,7 +150,6 @@ func TestTokenizer_FindMostFrequentPair(t *testing.T) {
 				LastToken:         tt.fields.MaxToken,
 				ReplacementKeys:   tt.fields.ReplacementKeys,
 				ReplacementValues: tt.fields.ReplacementValues,
-				ReplacementIndex:  tt.fields.ReplacementIndex,
 			}
 			got, got1 := tr.FindMostFrequentPair()
 			if !reflect.DeepEqual(got, tt.wantPair) {
