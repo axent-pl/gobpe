@@ -10,8 +10,8 @@ import (
 
 func main() {
 	tokenizr := tokenizer.New(
-		tokenizer.WithSplitPattern(`(^\p{L}+| \p{L}+| [0-9]+|[[:punct:]]|[[:space:]]+)`),
-		tokenizer.WithPreprocessor(preprocessor.New(`([[:punct:]]|^)(\p{L})`, `$1 $2`)),
+		tokenizer.WithSplitPattern(`(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]|\s+`),
+		tokenizer.WithPreprocessor(preprocessor.New(`([;.]|^)(\p{L})`, `$1 $2`)),
 	)
 
 	text := MustReadFile("lorem.txt")

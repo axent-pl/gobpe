@@ -15,10 +15,6 @@ func New(pattern string, replacement string) *Preprocessor {
 	return preprocessor
 }
 
-func NewWithDefaults() *Preprocessor {
-	return New(`([[:punct:]]|^)(\p{L})`, `$1 $2`)
-}
-
 func (p Preprocessor) Process(text []byte) []byte {
 	return p.Pattern.ReplaceAll(text, p.Replacement)
 }
