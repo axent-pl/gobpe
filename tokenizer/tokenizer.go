@@ -2,7 +2,11 @@ package tokenizer
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/axent-pl/gobpe/preprocessor"
 )
@@ -27,6 +31,16 @@ func WithPreprocessor(p *preprocessor.Preprocessor) func(*Tokenizer) {
 func WithSplitPattern(pattern string) func(*Tokenizer) {
 	return func(t *Tokenizer) {
 		t.SplitPattern = *regexp.MustCompile(pattern)
+	}
+}
+
+func FromSerialized(path string) func(*Tokenizer) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return func(t *Tokenizer) {
+		t.Deserialize(bytes)
 	}
 }
 
@@ -150,6 +164,23 @@ func (t *Tokenizer) Encode(text []byte) []int {
 	return encoded
 }
 
+func (t *Tokenizer) EncodeToString(text []byte) string {
+	var sb strings.Builder
+
+	encoded := t.Encode(text)
+
+	sb.WriteString("[")
+	for i, token := range encoded {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		sb.WriteString(fmt.Sprintf("%d", token))
+	}
+	sb.WriteString("]")
+
+	return sb.String()
+}
+
 func (t *Tokenizer) Decode(tokens []int) []byte {
 	var decoded = make([]int, 0, len(tokens))
 	decoded = tokens
@@ -173,6 +204,23 @@ func (t *Tokenizer) Decode(tokens []int) []byte {
 		decodedBytes = append(decodedBytes, byte(decoded[c]))
 	}
 	return decodedBytes
+}
+
+func (t *Tokenizer) DecodeFromString(tokens []byte) []byte {
+	trimmed := strings.Trim(string(tokens), "[]\n ")
+	if trimmed == "" {
+		return t.Decode([]int{})
+	}
+	parts := strings.Split(trimmed, ",")
+	result := make([]int, 0, len(parts))
+	for _, part := range parts {
+		num, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, num)
+	}
+	return t.Decode(result)
 }
 
 func (t *Tokenizer) StringTokens() map[int]string {

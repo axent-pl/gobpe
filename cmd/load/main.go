@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -11,38 +12,57 @@ import (
 	"strings"
 )
 
-func MustWriteToFile(filename string, data []byte) {
-	err := os.WriteFile(filename, data, 0600)
-	if err != nil {
-		panic(err)
+func main() {
+	var downloadPath string
+
+	flag.StringVar(&downloadPath, "dst", "", "Download path")
+	flag.Parse()
+
+	if downloadPath == "" {
+		usage()
+		os.Exit(1)
 	}
+
+	links, err := readStdin()
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		usage()
+		os.Exit(1)
+	}
+
+	download(links, downloadPath)
 }
 
-func MustReadFile(filepath string) []byte {
-	bytes, err := os.ReadFile(filepath)
-	if err != nil {
-		panic(err)
-	}
-	return bytes
+func usage() {
+	flag.Usage()
 }
 
-func LoadLinksFromFile(filepath string) ([]string, error) {
-	var links []string = make([]string, 0)
-	file, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+func readStdin() ([]string, error) {
+	var lines []string
 
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return lines, err
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		return lines, fmt.Errorf("no data in stdin")
+	}
+
+	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		links = append(links, scanner.Text())
+		lines = append(lines, scanner.Text())
 	}
-	return links, nil
+	if err := scanner.Err(); err != nil {
+		return lines, err
+	}
+
+	if len(lines) == 0 {
+		return lines, fmt.Errorf("no lines")
+	}
+	return lines, nil
 }
 
-func Download(links []string, path string) ([]string, error) {
+func download(links []string, path string) ([]string, error) {
 	var paths []string = make([]string, 0)
 	for _, link := range links {
 		log.Printf("Downloading link %s", link)

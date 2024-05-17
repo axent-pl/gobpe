@@ -8,3 +8,6 @@ https://wolnelektury.pl/media/book/txt/kucharczyk-o-biednym-bogatym-i-panu-jezus
 https://wolnelektury.pl/media/book/txt/matys-co-nigdy-prawda-nie-bylo-ani-nie-bedzie.txt
 https://wolnelektury.pl/media/book/txt/sroczynska-lasowiackie-serce.txt
 https://wolnelektury.pl/media/book/txt/wydro-sobotka.txt
+
+
+https://wolnelektury.pl/media/book/txt/sonety-odeskie-zeglarz.txt
