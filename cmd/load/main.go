@@ -15,7 +15,7 @@ import (
 func main() {
 	var downloadPath string
 
-	flag.StringVar(&downloadPath, "dst", "", "Download path")
+	flag.StringVar(&downloadPath, "datadir", "", "Download path")
 	flag.Parse()
 
 	if downloadPath == "" {

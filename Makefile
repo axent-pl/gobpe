@@ -11,9 +11,9 @@ build:
 # * bin/train - Train tokenizer
 # * bin/encode - Enocde sample string
 # * bin/decode - Enocde sample string and decode back to original
-run: build
-	cat data/url/mickiewicz.txt | ./bin/load -dst data/txt
-	./bin/preprocess -src data/txt
-	./bin/train -src data/txt -params params.json
+demo: build
+	cat data/url/mickiewicz.txt | ./bin/load -datadir data/txt
+	./bin/preprocess -datadir data/txt
+	cat data/txt/*.txt | ./bin/train -params params.json
 	echo "Adam Mickiewicz sławnym poetą był" | ./bin/encode -params params.json
 	echo "Adam Mickiewicz sławnym poetą był" | ./bin/encode -params params.json | ./bin/decode -params params.json

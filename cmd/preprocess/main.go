@@ -8,7 +8,7 @@ import (
 
 func main() {
 	var sourcePath string
-	flag.StringVar(&sourcePath, "src", "", "Path to train files")
+	flag.StringVar(&sourcePath, "datadir", "", "Path to train files")
 	flag.Parse()
 
 	paths, err := listFiles(sourcePath)
