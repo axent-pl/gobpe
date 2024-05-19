@@ -13,6 +13,7 @@ func main() {
 	var paramsFilePath string
 
 	flag.StringVar(&paramsFilePath, "params", "params.json", "Path to params file")
+	flag.Parse()
 
 	tokenizer := tokenizer.New(tokenizer.FromSerialized(paramsFilePath))
 
