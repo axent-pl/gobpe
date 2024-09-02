@@ -33,3 +33,4 @@ We are using content from https://wolnelektury.pl
 
 ## TODO
 * Add support for special tokens
+* Define tokenizer for polish so it forces the inflectional endings to be a separate set of tokens
